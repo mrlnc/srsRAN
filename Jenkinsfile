@@ -10,6 +10,6 @@ node {
     stage 'Test'
     // run tests
     app.inside {
-        sh '/app/run_tests.sh'
+        sh 'srsue /conf/ue.conf'
     }
 }
