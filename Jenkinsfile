@@ -12,6 +12,4 @@ node {
     app.inside {
         sh '/app/run_tests.sh'
     }
-
-    stage 'Publish'
 }
