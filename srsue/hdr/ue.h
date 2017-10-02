@@ -110,11 +110,14 @@ typedef struct {
 }gui_args_t;
 
 typedef struct {
-  phy_args_t phy; 
-  float      metrics_period_secs;
-  bool pregenerate_signals;
-  int ue_cateogry;
-  
+  std::string   apn;
+}nas_args_t;
+
+typedef struct {
+  phy_args_t  phy; 
+  float       metrics_period_secs;
+  bool        pregenerate_signals;
+  int         ue_cateogry;
 }expert_args_t;
 
 typedef struct {
@@ -125,6 +128,7 @@ typedef struct {
   log_args_t    log;
   gui_args_t    gui;
   usim_args_t   usim;
+  nas_args_t    nas;
   expert_args_t expert;
 }all_args_t;
 

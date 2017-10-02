@@ -38,18 +38,21 @@ nas::nas()
   ,eps_bearer_id(0)
   ,count_ul(0)
   ,count_dl(0)
+  ,apn("")
 {}
 
 void nas::init(usim_interface_nas *usim_,
                rrc_interface_nas  *rrc_,
                gw_interface_nas   *gw_,
-               srslte::log        *nas_log_)
+               srslte::log        *nas_log_,
+               std::string        apn_)
 {
   pool    = byte_buffer_pool::get_instance();
   usim    = usim_;
   rrc     = rrc_;
   gw      = gw_;
   nas_log = nas_log_;
+  apn     = apn_;
 }
 
 void nas::stop()
@@ -589,9 +592,15 @@ void nas::gen_pdn_connectivity_request(LIBLTE_BYTE_MSG_STRUCT *msg)
 
     // Set the optional flags
     pdn_con_req.esm_info_transfer_flag_present  = false; //FIXME: Check if this is needed
-    pdn_con_req.apn_present                     = false;
     pdn_con_req.protocol_cnfg_opts_present      = false;
     pdn_con_req.device_properties_present       = false;
+    if (apn != "") {
+      pdn_con_req.apn_present                   = true;
+      pdn_con_req.apn.apn                       = apn;
+    } else {
+      pdn_con_req.apn_present                   = false;
+    }
+    
 
     // Pack the message
     liblte_mme_pack_pdn_connectivity_request_msg(&pdn_con_req, msg);

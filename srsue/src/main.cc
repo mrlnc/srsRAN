@@ -111,6 +111,9 @@ void parse_args(all_args_t *args, int argc, char* argv[]) {
         ("usim.k",            bpo::value<string>(&args->usim.k),           "USIM K")
         
         
+        ("nas.apn",           bpo::value<std::string>(&args->nas.apn)->default_value(""),
+            "Set APN in PDN Connectivity Request. Default: empty (auto-selection by network)")
+
         /* Expert section */
         ("expert.phy.worker_cpu_mask",
             bpo::value<int>(&args->expert.phy.worker_cpu_mask)->default_value(-1),
@@ -195,7 +198,6 @@ void parse_args(all_args_t *args, int argc, char* argv[]) {
         ("expert.estimator_fil_w",    
             bpo::value<float>(&args->expert.phy.estimator_fil_w)->default_value(0.1), 
             "Chooses the coefficients for the 3-tap channel estimator centered filter.")
-        
         
         ("rf_calibration.tx_corr_dc_gain",  bpo::value<float>(&args->rf_cal.tx_corr_dc_gain)->default_value(0.0),  "TX DC offset gain correction")
         ("rf_calibration.tx_corr_dc_phase", bpo::value<float>(&args->rf_cal.tx_corr_dc_phase)->default_value(0.0), "TX DC offset phase correction")

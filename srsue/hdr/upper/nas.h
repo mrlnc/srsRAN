@@ -65,7 +65,8 @@ public:
   void init(usim_interface_nas  *usim_,
             rrc_interface_nas   *rrc_,
             gw_interface_nas    *gw_,
-            srslte::log         *nas_log_);
+            srslte::log         *nas_log_,
+            std::string         apn);
   void stop();
 
   emm_state_t get_state();
@@ -96,6 +97,9 @@ private:
   uint8_t  eps_bearer_id;
 
   uint8_t  transaction_id;
+
+  // Optional configuration
+  std::string apn;
 
   // NAS counters - incremented for each security-protected message recvd/sent
   uint32_t count_ul;

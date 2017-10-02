@@ -190,7 +190,7 @@ bool ue::init(all_args_t *args_)
   
   rrc.set_ue_category(args->expert.ue_cateogry);
   
-  nas.init(&usim, &rrc, &gw, &nas_log);
+  nas.init(&usim, &rrc, &gw, &nas_log, args->nas.apn);
   gw.init(&pdcp, &rrc, this, &gw_log);
   usim.init(&args->usim, &usim_log);
 
