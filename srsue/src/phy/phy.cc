@@ -80,7 +80,7 @@ void phy::set_default_args(phy_args_t *args)
 
 bool phy::check_args(phy_args_t *args) 
 {
-  if (args->nof_phy_threads > 3) {
+  if (args->nof_phy_threads > MAX_WORKERS) {
     log_h->console("Error in PHY args: nof_phy_threads must be 1, 2 or 3\n");
     return false; 
   }
