@@ -74,15 +74,19 @@ int field_sched_info::parse(libconfig::Setting &root)
     if (!root[i].lookupValue("si_periodicity", periodicity)) {
       fprintf(stderr, "Missing field si_periodicity in sched_info=%d\n", i);
       return -1; 
-    }    
+    }
+
+    // convert periodicity to enum (e.g. 16 to LIBLTE_RRC_SI_PERIODICITY_RF16)
     int k=0;
-    while(k<LIBLTE_RRC_SI_PERIODICITY_N_ITEMS && periodicity != liblte_rrc_si_periodicity_num[k])
+    while(k<LIBLTE_RRC_SI_PERIODICITY_N_ITEMS && periodicity != liblte_rrc_si_periodicity_num[k]) {
       k++;
+    }
     if (k == LIBLTE_RRC_SI_PERIODICITY_N_ITEMS) {
       fprintf(stderr, "Invalid value %d for si_periodicity\n", periodicity);
       return -1; 
     }
     data->sched_info[i].si_periodicity = (LIBLTE_RRC_SI_PERIODICITY_ENUM) k; 
+
     if (root[i].exists("si_mapping_info")) {
       data->sched_info[i].N_sib_mapping_info = root[i]["si_mapping_info"].getLength();
       if (data->sched_info[i].N_sib_mapping_info < LIBLTE_RRC_MAX_SIB) {
@@ -94,7 +98,7 @@ int field_sched_info::parse(libconfig::Setting &root)
             fprintf(stderr, "Invalid SIB index %d for si_mapping_info=%d in sched_info=%d\n", sib_index, j, i);
             return -1; 
           }
-        }    
+        }
       } else {
         fprintf(stderr, "Number of si_mapping_info values exceeds maximum (%d)\n", LIBLTE_RRC_MAX_SIB);
         return -1; 
@@ -118,8 +122,9 @@ int field_intra_neigh_cell_list::parse(libconfig::Setting &root)
     }
     
     int k=0;
-    while(k<LIBLTE_RRC_Q_OFFSET_RANGE_N_ITEMS && q_offset_range != liblte_rrc_q_offset_range_num[k])
+    while(k<LIBLTE_RRC_Q_OFFSET_RANGE_N_ITEMS && q_offset_range != liblte_rrc_q_offset_range_num[k]) {
       k++;
+    }
     if (k == LIBLTE_RRC_Q_OFFSET_RANGE_N_ITEMS) {
       fprintf(stderr, "Invalid value %d for q_offset_range\n", q_offset_range);
       return -1; 
@@ -147,8 +152,9 @@ int field_intra_black_cell_list::parse(libconfig::Setting &root)
     }
     
     int k=0;
-    while(k<LIBLTE_RRC_PHYS_CELL_ID_RANGE_N_ITEMS && range != liblte_rrc_phys_cell_id_range_num[k])
+    while(k<LIBLTE_RRC_PHYS_CELL_ID_RANGE_N_ITEMS && range != liblte_rrc_phys_cell_id_range_num[k]) {
       k++;
+    }
     if (k == LIBLTE_RRC_PHYS_CELL_ID_RANGE_N_ITEMS) {
       fprintf(stderr, "Invalid value %d for range\n", range);
       return -1; 
