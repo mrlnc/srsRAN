@@ -122,12 +122,12 @@ s1ap_nas_transport::handle_initial_ue_message(LIBLTE_S1AP_MESSAGE_INITIALUEMESSA
     m_s1ap_log->console("Received Service Request \n");
     liblte_mme_unpack_service_request_msg((LIBLTE_BYTE_MSG_STRUCT*) nas_msg, &service_req);
 
-    m_s1ap_log->info("Service Request not implemented. Sending Service Reject.");
-    m_s1ap_log->console("Service Request not implemented. Sending Service Reject.");
+    m_s1ap_log->info("Service Request not implemented. Sending Service Reject.\n");
+    m_s1ap_log->console("Service Request not implemented. Sending Service Reject.\n");
     /* Force UE to re-attach */
     pack_service_reject(reply_buffer, LIBLTE_MME_EMM_CAUSE_IMPLICITLY_DETACHED, enb_ue_s1ap_id);
     *reply_flag = true;
-
+    m_pool->deallocate(nas_msg);
     return false;
   }
   m_pool->deallocate(nas_msg);
@@ -927,7 +927,9 @@ s1ap_nas_transport::pack_service_reject(srslte::byte_buffer_t *reply_msg, uint8_
   //Setup Dw NAS structure
   LIBLTE_S1AP_MESSAGE_DOWNLINKNASTRANSPORT_STRUCT *dw_nas = &init->choice.DownlinkNASTransport;
   dw_nas->ext=false;
-  dw_nas->MME_UE_S1AP_ID.MME_UE_S1AP_ID = 0;
+  // MME UE S1AP ID must not be 0 (NULL), otherwise unpack will fail
+  // maybe this is the wrong S1AP message type?
+  dw_nas->MME_UE_S1AP_ID.MME_UE_S1AP_ID = enb_ue_s1ap_id;
   dw_nas->eNB_UE_S1AP_ID.ENB_UE_S1AP_ID = enb_ue_s1ap_id;
   dw_nas->HandoverRestrictionList_present=false;
   dw_nas->SubscriberProfileIDforRFP_present=false;
