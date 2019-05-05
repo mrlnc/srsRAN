@@ -2141,6 +2141,57 @@ void rrc::write_pdu(uint32_t lcid, byte_buffer_t* pdu)
       mac_timers->timer_get(t302)->stop();
       rrc_log->console("RRC Connected\n");
     }
+  } else {
+    /*
+    TODO: remove this workaround
+    some eNodeB send RRC Connection Reconfiguration right away after RRC Security Mode Command
+    srsLTE currently only activates security contexts *after* processing the then-encrypted
+    thus unreadable RRC Connection Reconfiguration. this quick workaround immediately activates
+    security after SMC is received from lower layers.
+    */
+    asn1::bit_ref bref(pdu->msg, pdu->N_bytes);
+    asn1::rrc::dl_dcch_msg_s dl_dcch_msg;
+    if (dl_dcch_msg.unpack(bref) != asn1::SRSASN_SUCCESS or
+        dl_dcch_msg.msg.type().value != dl_dcch_msg_type_c::types_opts::c1) {
+      rrc_log->error("Failed to unpack DL-DCCH message\n");
+      pool->deallocate(pdu);
+      return;
+    }
+    if (dl_dcch_msg.msg.c1().type().value == dl_dcch_msg_type_c::c1_c_::types::security_mode_cmd) {
+      rrc_log->info("Found Security Mode Command, processing as fast as possible :)\n");
+      dl_dcch_msg_type_c::c1_c_* c1 = &dl_dcch_msg.msg.c1();
+      transaction_id = c1->security_mode_cmd().rrc_transaction_id;
+
+      cipher_algo = (CIPHERING_ALGORITHM_ID_ENUM)c1->security_mode_cmd()
+                        .crit_exts.c1()
+                        .security_mode_cmd_r8()
+                        .security_cfg_smc.security_algorithm_cfg.ciphering_algorithm.value;
+      integ_algo = (INTEGRITY_ALGORITHM_ID_ENUM)c1->security_mode_cmd()
+                       .crit_exts.c1()
+                       .security_mode_cmd_r8()
+                       .security_cfg_smc.security_algorithm_cfg.integrity_prot_algorithm.value;
+
+      rrc_log->info("Received Security Mode Command eea: %s, eia: %s\n", ciphering_algorithm_id_text[cipher_algo],
+                    integrity_algorithm_id_text[integ_algo]);
+
+      // Generate AS security keys
+      uint8_t k_asme[32];
+      nas->get_k_asme(k_asme, 32);
+      rrc_log->debug_hex(k_asme, 32, "UE K_asme");
+      rrc_log->debug("Generating K_enb with UL NAS COUNT: %d\n", nas->get_k_enb_count());
+      usim->generate_as_keys(k_asme, nas->get_k_enb_count(), k_rrc_enc, k_rrc_int, k_up_enc, k_up_int, cipher_algo,
+                             integ_algo);
+      rrc_log->info_hex(k_rrc_enc, 32, "RRC encryption key - k_rrc_enc");
+      rrc_log->info_hex(k_rrc_int, 32, "RRC integrity key  - k_rrc_int");
+      rrc_log->info_hex(k_up_enc, 32, "UP encryption key  - k_up_enc");
+
+      security_is_activated = true;
+
+      // Configure PDCP for security
+      pdcp->config_security(lcid, k_rrc_enc, k_rrc_int, k_up_enc, cipher_algo, integ_algo);
+      pdcp->enable_integrity(lcid);
+      pdcp->enable_encryption(lcid);
+    }
   }
 
   // add PDU to command queue
