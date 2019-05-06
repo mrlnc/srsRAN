@@ -79,32 +79,7 @@ void nas::init(
     srslte::mnc_to_bytes(mnc, home_plmn.mnc);
   }
 
-  // parse and sanity check EIA list
-  std::vector<uint8_t> cap_list = split_string(cfg_.eia);
-  if (cap_list.empty()) {
-    nas_log->error("Empty EIA list. Select at least one EIA algorithm.\n");
-  }
-  for (std::vector<uint8_t>::const_iterator it = cap_list.begin(); it != cap_list.end(); ++it) {
-    if (*it != 0 && *it < 3) {
-      eia_caps[*it] = true;
-    } else {
-      nas_log->error("EIA%d is not a valid EIA algorithm.\n", *it);
-    }
-  }
-
-  // parse and sanity check EEA list
-  cap_list = split_string(cfg_.eea);
-  if (cap_list.empty()) {
-    nas_log->error("Empty EEA list. Select at least one EEA algorithm.\n");
-  }
-  for (std::vector<uint8_t>::const_iterator it = cap_list.begin(); it != cap_list.end(); ++it) {
-    if (*it < 3) {
-      eea_caps[*it] = true;
-    } else {
-      nas_log->error("EEA%d is not a valid EEA algorithm.\n", *it);
-    }
-  }
-
+  set_security_capabilities(cfg_.eia, cfg_.eea);
   cfg     = cfg_;
 
   if((read_ctxt_file(&ctxt))) {
@@ -120,6 +95,39 @@ void nas::init(
   srand(time(NULL));
 
   running = true;
+}
+
+void nas::set_security_capabilities(std::string eia, std::string eea) {
+  // parse and sanity check EIA list
+
+  bzero(eia_caps, sizeof(eia_caps));
+  bzero(eea_caps, sizeof(eea_caps));
+
+  nas_log->info("Setting Security Capabilities to EIA %s EEA %s\n", eia.c_str(), eea.c_str());
+  std::vector<uint8_t> cap_list = split_string(eia);
+  if (cap_list.empty()) {
+    nas_log->error("Empty EIA list. Select at least one EIA algorithm.\n");
+  }
+  for (std::vector<uint8_t>::const_iterator it = cap_list.begin(); it != cap_list.end(); ++it) {
+    if (*it != 0 && *it < 3) {
+      eia_caps[*it] = true;
+    } else {
+      nas_log->error("EIA%d is not a valid EIA algorithm.\n", *it);
+    }
+  }
+
+  // parse and sanity check EEA list
+  cap_list = split_string(eea);
+  if (cap_list.empty()) {
+    nas_log->error("Empty EEA list. Select at least one EEA algorithm.\n");
+  }
+  for (std::vector<uint8_t>::const_iterator it = cap_list.begin(); it != cap_list.end(); ++it) {
+    if (*it < 3) {
+      eea_caps[*it] = true;
+    } else {
+      nas_log->error("EEA%d is not a valid EEA algorithm.\n", *it);
+    }
+  }
 }
 
 void nas::stop() {
@@ -263,7 +271,7 @@ bool nas::rrc_connect() {
     return false;
   }
 
-  if (state == EMM_STATE_REGISTERED) {
+  if (state == EMM_STATE_REGISTERED && !cfg.force_imsi_attach) {
     gen_service_request(dedicatedInfoNAS);
   } else {
     gen_attach_request(dedicatedInfoNAS);

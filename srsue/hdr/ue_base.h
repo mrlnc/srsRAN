@@ -148,6 +148,7 @@ public:
 
   virtual bool init(all_args_t *args_) = 0;
   virtual void stop() = 0;
+  virtual void set_security_capabilities(std::string eia, std::string eea) = 0;
   virtual bool switch_on() = 0;
   virtual bool switch_off() = 0;
   virtual bool is_attached() = 0;

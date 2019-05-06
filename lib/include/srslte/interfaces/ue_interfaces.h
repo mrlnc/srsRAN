@@ -145,6 +145,7 @@ class nas_interface_ue
 public:
   virtual bool attach_request() = 0;
   virtual bool detach_request() = 0;
+  virtual void set_security_capabilities(std::string eia, std::string eea) = 0;
 };
 
 // NAS interface for UE

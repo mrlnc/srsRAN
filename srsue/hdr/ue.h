@@ -64,6 +64,7 @@ public:
 
   bool init(all_args_t *args_);
   void stop();
+  void set_security_capabilities(std::string eia, std::string eea);
   bool switch_on();
   bool switch_off();
   bool is_attached();

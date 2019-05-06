@@ -89,6 +89,9 @@ public:
   uint32_t get_ipv4_addr();
   bool get_ipv6_addr(uint8_t *ipv6_addr);
 
+
+  void set_security_capabilities(std::string eia, std::string eea);
+
   // UE interface
   bool attach_request();
   bool detach_request();

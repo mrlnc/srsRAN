@@ -321,6 +321,10 @@ void ue::stop()
   }
 }
 
+void ue::set_security_capabilities(std::string eia, std::string eea) {
+  nas.set_security_capabilities(eia, eea);
+}
+
 bool ue::switch_on() {
   return nas.attach_request();
 }
