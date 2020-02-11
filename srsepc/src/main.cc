@@ -75,7 +75,7 @@ typedef struct {
 /**********************************************************************
  *  Program arguments processing
  ***********************************************************************/
-string config_file;
+string config_dir = "/etc/srslte/";
 
 void parse_args(all_args_t* args, int argc, char* argv[])
 {
@@ -95,7 +95,6 @@ void parse_args(all_args_t* args, int argc, char* argv[])
   string   sgi_if_addr;
   string   sgi_if_name;
   string   dns_addr;
-  string   hss_db_file;
   string   hss_auth_algo;
   string   log_filename;
 
@@ -122,7 +121,6 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     ("mme.encryption_algo", bpo::value<string>(&encryption_algo)->default_value("EEA0"),     "Set preferred encryption algorithm for NAS layer ")
     ("mme.integrity_algo",  bpo::value<string>(&integrity_algo)->default_value("EIA1"),      "Set preferred integrity protection algorithm for NAS")
     ("mme.paging_timer",    bpo::value<uint16_t>(&paging_timer)->default_value(2),           "Set paging timer value in seconds (T3413)")
-    ("hss.db_file",         bpo::value<string>(&hss_db_file)->default_value("ue_db.csv"),    ".csv file that stores UE's keys")
     ("spgw.gtpu_bind_addr", bpo::value<string>(&spgw_bind_addr)->default_value("127.0.0.1"), "IP address of SP-GW for the S1-U connection")
     ("spgw.sgi_if_addr",    bpo::value<string>(&sgi_if_addr)->default_value("176.16.0.1"),   "IP address of TUN interface for the SGi connection")
     ("spgw.sgi_if_name",    bpo::value<string>(&sgi_if_name)->default_value("srs_spgw_sgi"), "Name of TUN interface for the SGi connection")
@@ -155,12 +153,12 @@ void parse_args(all_args_t* args, int argc, char* argv[])
   // Positional options - config file location
   bpo::options_description position("Positional options");
   position.add_options()
-    ("config_file", bpo::value< string >(&config_file), "MME configuration file")
+    ("config_dir", bpo::value< string >(&config_dir), "EPC configuration directory")
   ;
   // clang-format on
 
   bpo::positional_options_description p;
-  p.add("config_file", -1);
+  p.add("config_dir", -1);
 
   // these options are allowed on the command line
   bpo::options_description cmdline_options;
@@ -178,13 +176,15 @@ void parse_args(all_args_t* args, int argc, char* argv[])
 
   // help option was given - print usage and exit
   if (vm.count("help")) {
-    cout << "Usage: " << argv[0] << " [OPTIONS] config_file" << endl << endl;
+    cout << "Usage: " << argv[0] << " [OPTIONS] config_dir" << endl << endl;
     cout << common << endl << general << endl;
     exit(0);
   }
 
+  string config_file = config_dir +"/epc.conf";
+
   // if no config file given, check users home path
-  if (!vm.count("config_file")) {
+  if (!vm.count("config_dir")) {
     if (!config_exists(config_file, "epc.conf")) {
       cout << "Failed to read EPC configuration file " << config_file << " - exiting" << endl;
       exit(1);
@@ -281,7 +281,6 @@ void parse_args(all_args_t* args, int argc, char* argv[])
   args->spgw_args.sgi_if_addr            = sgi_if_addr;
   args->spgw_args.sgi_if_name            = sgi_if_name;
   args->spgw_args.max_paging_queue       = max_paging_queue;
-  args->hss_args.db_file                 = hss_db_file;
 
   // Apply all_level to any unset layers
   if (vm.count("log.all_level")) {
@@ -333,11 +332,13 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     }
   }
 
+  string hss_db_file = config_dir +"/user_db.csv";
   // Check user database
-  if (!config_exists(args->hss_args.db_file, "user_db.csv")) {
-    cout << "Failed to read HSS user database file " << args->hss_args.db_file << " - exiting" << endl;
+  if (!config_exists(hss_db_file, "user_db.csv")) {
+    cout << "Failed to read HSS user database file " << hss_db_file << " - exiting" << endl;
     exit(1);
   }
+  args->hss_args.db_file = hss_db_file;
 
   return;
 }

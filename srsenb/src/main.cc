@@ -44,7 +44,7 @@ namespace bpo = boost::program_options;
 /**********************************************************************
  *  Program arguments processing
  ***********************************************************************/
-string config_file;
+string config_dir = "/etc/srslte/";
 
 void parse_args(all_args_t* args, int argc, char* argv[])
 {
@@ -81,10 +81,6 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     ("enb.nof_ports",     bpo::value<uint32_t>(&args->enb.nof_ports)->default_value(1),            "Number of ports")
     ("enb.tm",            bpo::value<uint32_t>(&args->enb.transmission_mode)->default_value(1),    "Transmission mode (1-8)")
     ("enb.p_a",           bpo::value<float>(&args->enb.p_a)->default_value(0.0f),                  "Power allocation rho_a (-6, -4.77, -3, -1.77, 0, 1, 2, 3)")
-
-    ("enb_files.sib_config", bpo::value<string>(&args->enb_files.sib_config)->default_value("sib.conf"), "SIB configuration files")
-    ("enb_files.rr_config",  bpo::value<string>(&args->enb_files.rr_config)->default_value("rr.conf"),   "RR configuration files")
-    ("enb_files.drb_config", bpo::value<string>(&args->enb_files.drb_config)->default_value("drb.conf"), "DRB configuration files")
 
     ("rf.dl_earfcn",      bpo::value<uint32_t>(&args->enb.dl_earfcn)->default_value(3400), "Downlink EARFCN")
     ("rf.ul_earfcn",      bpo::value<uint32_t>(&args->enb.ul_earfcn)->default_value(0),    "Uplink EARFCN (Default based on Downlink EARFCN)")
@@ -197,12 +193,12 @@ void parse_args(all_args_t* args, int argc, char* argv[])
   // Positional options - config file location
   bpo::options_description position("Positional options");
   position.add_options()
-    ("config_file", bpo::value< string >(&config_file), "eNodeB configuration file")
+    ("config_dir", bpo::value< string >(&config_dir), "eNodeB configuration directory")
   ;
 
   // clang-format on
   bpo::positional_options_description p;
-  p.add("config_file", -1);
+  p.add("config_dir", -1);
 
   // these options are allowed on the command line
   bpo::options_description cmdline_options;
@@ -219,7 +215,7 @@ void parse_args(all_args_t* args, int argc, char* argv[])
   }
   // help option was given - print usage and exit
   if (vm.count("help")) {
-    cout << "Usage: " << argv[0] << " [OPTIONS] config_file" << endl << endl;
+    cout << "Usage: " << argv[0] << " [OPTIONS] config_dir" << endl << endl;
     cout << common << endl << general << endl;
     exit(0);
   }
@@ -231,9 +227,10 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     exit(0);
   }
 
+  string config_file = config_dir +"/enb.conf";
   // if no config file given, check users home path
-  if (!vm.count("config_file")) {
-    if (!config_exists(config_file, "enb.conf")) {
+  if (!vm.count("config_dir")) {
+    if (!config_exists(config_dir, "enb.conf")) {
       cout << "Failed to read eNB configuration file " << config_file << " - exiting" << endl;
       exit(1);
     }
@@ -366,17 +363,20 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     }
   }
 
+  args->enb_files.sib_config = config_dir +"/sib.conf";
   // Check remaining eNB config files
   if (!config_exists(args->enb_files.sib_config, "sib.conf")) {
     cout << "Failed to read SIB configuration file " << args->enb_files.sib_config << " - exiting" << endl;
     exit(1);
   }
 
+  args->enb_files.rr_config = config_dir +"/rr.conf";
   if (!config_exists(args->enb_files.rr_config, "rr.conf")) {
     cout << "Failed to read RR configuration file " << args->enb_files.rr_config << " - exiting" << endl;
     exit(1);
   }
 
+  args->enb_files.drb_config = config_dir +"/drb.conf";
   if (!config_exists(args->enb_files.drb_config, "drb.conf")) {
     cout << "Failed to read DRB configuration file " << args->enb_files.drb_config << " - exiting" << endl;
     exit(1);
