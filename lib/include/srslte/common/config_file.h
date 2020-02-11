@@ -61,4 +61,45 @@ bool config_exists(std::string& filename, std::string default_name)
   return true;
 }
 
+std::string config_find(std::string& config_dir, std::string config_name)
+{
+  std::string full_path;
+
+  // search in specified config dir
+  if (!config_dir.empty()) {
+    full_path = config_dir + "/" + config_name;
+    std::ifstream conf(full_path, std::ios::in);
+    if (!conf.fail()) {
+      return full_path;
+    }
+  }
+
+  // config not found, try $HOME/.config/srslte/ instead
+  const char* homedir = getenv("HOME");
+  if (homedir == NULL) {
+    homedir = getpwuid(getuid())->pw_dir;
+  }
+  if (homedir != NULL) {
+    full_path = std::string(homedir) + "/.config/srslte/" + config_name;
+    std::ifstream conf(full_path, std::ios::in);
+    conf.open(full_path);
+    if (!conf.fail()) {
+      return full_path;
+    }
+  }
+
+  // Last chance, try to find file in /etc/srslte
+  full_path = "/etc/srslte/" + config_name;
+  std::ifstream conf(full_path, std::ios::in);
+  conf.open(full_path);
+  if (!conf.fail()) {
+    return full_path;
+  }
+
+  // config not found
+  printf(
+      "%s not found, search directories: %s ~/.config/srslte /etc/srslte\n", config_name.c_str(), config_dir.c_str());
+  return std::string("");
+}
+
 #endif // SRSLTE_CONFIG_FILE_H

@@ -34,15 +34,6 @@ integrity_algo = EIA1
 paging_timer = 2
 
 #####################################################################
-# HSS configuration
-#
-# db_file:         Location of .csv file that stores UEs information.
-#
-#####################################################################
-[hss]
-db_file = user_db.csv
-
-#####################################################################
 # SP-GW configuration
 #
 # gtpu_bind_addr:   GTP-U bind address.
