@@ -109,7 +109,8 @@ typedef enum {
 static const char liblte_security_ciphering_algorithm_id_text[LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_N_ITEMS][20] = {
     "EEA0",
     "128-EEA1",
-    "128-EEA2"};
+    "128-EEA2",
+    "128-EEA3"};
 typedef enum {
   LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_EIA0 = 0,
   LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA1,
@@ -120,7 +121,8 @@ typedef enum {
 static const char liblte_security_integrity_algorithm_id_text[LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_N_ITEMS][20] = {
     "EIA0",
     "128-EIA1",
-    "128-EIA2"};
+    "128-EIA2",
+    "128-EIA3"};
 // Structs
 // Functions
 LIBLTE_ERROR_ENUM liblte_security_generate_k_nas(uint8*                                      k_asme,
