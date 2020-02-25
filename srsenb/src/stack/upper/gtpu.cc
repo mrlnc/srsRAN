@@ -33,6 +33,7 @@ namespace srsenb {
 gtpu::gtpu() : m1u(this) {}
 
 bool gtpu::init(std::string                  gtp_bind_addr_,
+                std::string                  gtp_ext_addr_,
                 std::string                  mme_addr_,
                 std::string                  m1u_multiaddr_,
                 std::string                  m1u_if_addr_,
@@ -44,6 +45,7 @@ bool gtpu::init(std::string                  gtp_bind_addr_,
   pdcp          = pdcp_;
   gtpu_log      = gtpu_log_;
   gtp_bind_addr = gtp_bind_addr_;
+  gtp_ext_addr  = gtp_ext_addr_;
   mme_addr      = mme_addr_;
   pool          = byte_buffer_pool::get_instance();
   stack         = stack_;

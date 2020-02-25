@@ -1045,7 +1045,7 @@ bool s1ap::send_initial_ctxt_setup_response(uint16_t rnti, LIBLTE_S1AP_MESSAGE_I
   // Fill in the GTP bind address for all bearers
   for (uint32_t i = 0; i < res->E_RABSetupListCtxtSURes.len; i++) {
     uint8_t addr[4];
-    inet_pton(AF_INET, args.gtp_bind_addr.c_str(), addr);
+    inet_pton(AF_INET, args.gtp_ext_addr.c_str(), addr);
     liblte_unpack(addr, 4, res->E_RABSetupListCtxtSURes.buffer[i].transportLayerAddress.buffer);
     res->E_RABSetupListCtxtSURes.buffer[i].transportLayerAddress.n_bits = 32;
     res->E_RABSetupListCtxtSURes.buffer[i].transportLayerAddress.ext    = false;
@@ -1085,7 +1085,7 @@ bool s1ap::send_erab_setup_response(uint16_t rnti, LIBLTE_S1AP_MESSAGE_E_RABSETU
   // Fill in the GTP bind address for all bearers
   for (uint32_t i = 0; i < res->E_RABSetupListBearerSURes.len; i++) {
     uint8_t addr[4];
-    inet_pton(AF_INET, args.gtp_bind_addr.c_str(), addr);
+    inet_pton(AF_INET, args.gtp_ext_addr.c_str(), addr);
     liblte_unpack(addr, 4, res->E_RABSetupListBearerSURes.buffer[i].transportLayerAddress.buffer);
     res->E_RABSetupListBearerSURes.buffer[i].transportLayerAddress.n_bits = 32;
     res->E_RABSetupListBearerSURes.buffer[i].transportLayerAddress.ext    = false;

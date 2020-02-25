@@ -75,6 +75,7 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     ("enb.mnc",           bpo::value<string>(&mnc)->default_value("01"),                           "Mobile Network Code")
     ("enb.mme_addr",      bpo::value<string>(&args->stack.s1ap.mme_addr)->default_value("127.0.0.1"),"IP address of MME for S1 connection")
     ("enb.gtp_bind_addr", bpo::value<string>(&args->stack.s1ap.gtp_bind_addr)->default_value("192.168.3.1"), "Local IP address to bind for GTP connection")
+    ("enb.gtp_ext_addr",  bpo::value<string>(&args->stack.s1ap.gtp_ext_addr)->default_value(""),   "External address for GTP connection, default: gtp_bind_addr")
     ("enb.s1c_bind_addr", bpo::value<string>(&args->stack.s1ap.s1c_bind_addr)->default_value("192.168.3.1"), "Local IP address to bind for S1AP connection")
     ("enb.phy_cell_id",   bpo::value<uint32_t>(&args->enb.pci)->default_value(0),                  "Physical Cell Identity (PCI)")
     ("enb.n_prb",         bpo::value<uint32_t>(&args->enb.n_prb)->default_value(25),               "Number of PRB")
@@ -280,6 +281,10 @@ void parse_args(all_args_t* args, int argc, char* argv[])
   }
   if (!srslte::string_to_mnc(mnc, &args->stack.s1ap.mnc)) {
     cout << "Error parsing enb.mnc:" << mnc << " - must be a 2 or 3-digit string." << endl;
+  }
+
+  if (args->stack.s1ap.gtp_ext_addr.empty()) {
+    args->stack.s1ap.gtp_ext_addr = args->stack.s1ap.gtp_bind_addr;
   }
 
   // Convert UL/DL EARFCN to frequency if needed
