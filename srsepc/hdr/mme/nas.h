@@ -245,6 +245,8 @@ public:
   bool pack_tracking_area_update_reject(srsran::byte_buffer_t* nas_buffer, uint8_t emm_cause);
   bool pack_attach_accept(srsran::byte_buffer_t* nas_buffer);
 
+  bool send_sms_downlink_nas_transport();
+
   /* Security functions */
   bool integrity_check(srsran::byte_buffer_t* pdu);
   bool short_integrity_check(srsran::byte_buffer_t* pdu);

@@ -1119,6 +1119,9 @@ bool nas::handle_attach_complete(srsran::byte_buffer_t* nas_rx)
     m_logger.info("Sending EMM Information");
   }
   m_emm_ctx.state = EMM_STATE_REGISTERED;
+
+  // send SMS to user 
+  send_sms_downlink_nas_transport();
   return true;
 }
 
@@ -1361,6 +1364,132 @@ bool nas::pack_authentication_reject(srsran::byte_buffer_t* nas_buffer)
     srsran::console("Error packing Authentication Reject\n");
     return false;
   }
+  return true;
+}
+
+/* send a SMS over NAS */
+bool nas::send_sms_downlink_nas_transport()
+{
+  m_logger.info("Packing SMS into NAS Downlink Transport");
+
+  auto nas_tx = srsran::make_byte_buffer();
+  if (nas_tx == nullptr) {
+    m_logger.error("Couldn't allocate PDU in %s().", __FUNCTION__);
+    return false;
+  }
+
+  uint8_t sec_hdr_type = LIBLTE_MME_SECURITY_HDR_TYPE_INTEGRITY_AND_CIPHERED;
+  m_sec_ctx.dl_nas_count++;
+
+  LIBLTE_MME_DOWNLINK_NAS_TRANSPORT_MSG_STRUCT dl_nas_transport;
+
+  // Downlink SMS (DELIVER)
+  uint8_t payload[] = {
+    0x09,
+    /* GSM A-I/F DTAP - CP-DATA
+    Protocol Discriminator: SMS messages (9)
+        .... 1001 = Protocol discriminator: SMS messages (0x9)
+        0... .... = TI flag: allocated by sender
+        .000 .... = TIO: 0 */
+    0x01,
+    /* DTAP Short Message Service Message Type: CP-DATA (0x01) */
+    0x27,
+    /* CP-User Data
+        Length: 39
+        RPDU (not displayed) */
+    0x01,
+    /* GSM A-I/F RP - RP-DATA (Network to MS)
+    Message Type RP-DATA (Network to MS) */
+    0x01,
+    /*
+    RP-Message Reference
+        RP-Message Reference: 0x01 (1) */
+
+    0x07,
+    /* RP-Originator Address - (491760000490)
+        Length: 7 */
+    0x91,
+    /* 1... .... = Extension: No Extension
+        .001 .... = Type of number: International Number (0x1)
+        .... 0001 = Numbering plan identification: ISDN/Telephony Numbering (ITU-T Rec. E.164 / ITU-T Rec. E.163) (0x1) */
+    0x94, 0x71, 0x06, 0x00, 0x40, 0x09,
+    /* Called Party BCD Number: 491760000490 */
+    0x00,
+    /* RP-Destination Address
+        Length: 0 */
+    0x1b,
+    /* RP-User Data
+        Length: 27
+        TPDU (not displayed) */
+
+    0x04,
+    /* GSM SMS TPDU (GSM 03.40) SMS-DELIVER
+        0... .... = TP-RP: TP Reply Path parameter is not set in this SMS SUBMIT/DELIVER
+        .0.. .... = TP-UDHI: The TP UD field contains only the short message
+        ..0. .... = TP-SRI: A status report shall not be returned to the SME
+        .... 0... = TP-LP: The message has not been forwarded and is not a spawned message
+        .... .1.. = TP-MMS: No more messages are waiting for the MS in this SC
+        .... ..00 = TP-MTI: SMS-DELIVER (0)
+        TP-Originating-Address - (491111111111111) */
+
+    0x0d,
+    /* Length: 13 address digits */
+    0x91,
+    /*  1... .... = Extension: No extension
+        .001 .... = Type of number: International (1)
+        .... 0001 = Numbering plan: ISDN/telephone (E.164/E.163) (1) */
+    0x94, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
+    /* TP-OA Digits: 491111111111111
+       E.164 number (MSISDN): 491111111111111
+                Country Code: Germany (Federal Republic of) (49) */
+
+    0xf9, 
+    /* TP-PID: 249
+            11.. .... = Bits 0-5 for SC specific use: 0x3
+            ..11 1001 = SC specific: 0x39 */
+    0x10,
+    /* TP-DCS: 16
+            00.. .... = Coding Group Bits: General Data Coding indication (0)
+            ..0. .... = Text: Not compressed
+            ...1 .... = Message Class: Defined below
+            .... 00.. = Character Set: GSM 7 bit default alphabet (0x0)
+            .... ..00 = Message Class: Class 0 (0x0) */
+    0x91, 0x90, 0x61, 0x61, 0x02, 0x32, 0x80,
+    /* TP-Service-Centre-Time-Stamp
+            Year: 19
+            Month: 9
+            Day: 16
+            Hour: 16
+            Minutes: 20
+            Seconds: 23
+            Timezone: GMT + 2 hours 0 minutes
+    */
+    0x08,
+    /* TP-User-Data-Length: (8) depends on Data-Coding-Scheme */
+    0xc4, 0x32, 0x3b, 0x6d, 0x2f, 0xcb, 0x65
+    /* TP-User-Data
+            SMS text: Deliver2
+    */
+    };
+
+  memcpy(dl_nas_transport.nas_msg.msg, payload, sizeof(payload));
+  dl_nas_transport.nas_msg.N_bytes = sizeof(payload);
+
+  LIBLTE_ERROR_ENUM err = liblte_mme_pack_downlink_nas_transport_msg(&dl_nas_transport, sec_hdr_type, m_sec_ctx.dl_nas_count, (LIBLTE_BYTE_MSG_STRUCT*)nas_tx.get());
+
+  // Encrypt NAS message
+  cipher_encrypt(nas_tx.get());
+
+  // Generate MAC for integrity protection
+  uint8_t mac[4];
+  integrity_generate(nas_tx.get(), mac);
+  memcpy(&nas_tx.get()->msg[1], mac, 4);
+
+  m_s1ap->send_downlink_nas_transport(
+        m_ecm_ctx.enb_ue_s1ap_id, m_ecm_ctx.mme_ue_s1ap_id, nas_tx.get(), m_ecm_ctx.enb_sri);
+
+  srsran::console("Sending SMS-over-NAS\n");
+  m_logger.info("Sending SMS-over-NAS");
   return true;
 }
 

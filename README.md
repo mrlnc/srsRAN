@@ -1,3 +1,9 @@
+```
+Patch:
+
+send SMS-over-NAS to every user that connects. Does not include any SMS logic for acknowledgement or delivery report, only SMS-DELIVER.
+```
+
 srsRAN
 ======
 
