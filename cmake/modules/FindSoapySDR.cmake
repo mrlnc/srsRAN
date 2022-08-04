@@ -37,6 +37,7 @@ if(NOT SOAPYSDR_FOUND)
           /usr/lib
           /usr/local/lib
           /usr/lib/arm-linux-gnueabihf     
+          /usr/lib/aarch64-linux-gnu
   )
 
 

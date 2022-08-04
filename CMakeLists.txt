@@ -256,6 +256,7 @@ endif(ENABLE_SOAPYSDR)
 if(ENABLE_ZEROMQ)
   find_package(ZeroMQ)
   if(ZEROMQ_FOUND)
+    message(STATUS "Building with ZMQ support.")
     include_directories(${ZEROMQ_INCLUDE_DIRS})
     link_directories(${ZEROMQ_LIBRARY_DIRS})
   endif(ZEROMQ_FOUND)
@@ -547,10 +548,10 @@ if("Ninja" STREQUAL ${CMAKE_GENERATOR})
 endif()
 
 # Add -Werror to C/C++ flags for newer compilers
-if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-endif()
+#if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
+#  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+#endif()
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
   # Increase inlining limit to allow gcc compilation on e.g. RPi2
