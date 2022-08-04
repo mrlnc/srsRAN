@@ -35,6 +35,7 @@ if(NOT ZEROMQ_FOUND)
             /usr/lib
             /usr/local/lib
             /usr/lib/arm-linux-gnueabihf
+            /usr/lib/aarch64-linux-gnu
             )
 
     if(ZEROMQ_INCLUDE_DIRS AND ZEROMQ_LIBRARIES)
