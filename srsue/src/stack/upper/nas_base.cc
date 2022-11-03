@@ -58,6 +58,8 @@ void nas_base::integrity_generate(uint8_t* key_128,
                                   uint32_t msg_len,
                                   uint8_t* mac)
 {
+  logger.error("Generating MAC. Algo: %d", ctxt_base.integ_algo);
+
   switch (ctxt_base.integ_algo) {
     case INTEGRITY_ALGORITHM_ID_EIA0:
       break;

@@ -488,14 +488,14 @@ void nas::write_pdu(uint32_t lcid, unique_byte_buffer_t pdu)
         }
         break;
       } else {
-        logger.error("Not handling NAS message with integrity check error");
-        return;
+        logger.error("INSECURE: Handling NAS message with integrity check error");
+        //return;
       }
     case LIBLTE_MME_SECURITY_HDR_TYPE_INTEGRITY_AND_CIPHERED_WITH_NEW_EPS_SECURITY_CONTEXT:
       break;
     default:
-      logger.error("Not handling NAS message with SEC_HDR_TYPE=%02X", sec_hdr_type);
-      return;
+      logger.error("INSECURE: Handling NAS message with SEC_HDR_TYPE=%02X", sec_hdr_type);
+      //return;
   }
 
   // Write NAS pcap
@@ -522,20 +522,20 @@ void nas::write_pdu(uint32_t lcid, unique_byte_buffer_t pdu)
       case LIBLTE_MME_MSG_TYPE_SERVICE_REJECT:
         break;
       default:
-        logger.error("Not handling NAS message MSG_TYPE=%02X with SEC_HDR_TYPE=%02X without integrity protection!",
+        logger.error("INSECURE: Handling NAS message MSG_TYPE=%02X with SEC_HDR_TYPE=%02X without integrity protection!",
                      msg_type,
                      sec_hdr_type);
-        return;
+        //return;
     }
   }
 
   // Reserved for Security Mode Command (Sec 9.3.1)
   if (sec_hdr_type == LIBLTE_MME_SECURITY_HDR_TYPE_INTEGRITY_WITH_NEW_EPS_SECURITY_CONTEXT &&
       msg_type != LIBLTE_MME_MSG_TYPE_SECURITY_MODE_COMMAND) {
-    logger.error("Not handling NAS message MSG_TYPE=%02X with SEC_HDR_TYPE=%02X. Security header type reserved!",
+    logger.error("INSECURE: Handling NAS message MSG_TYPE=%02X with SEC_HDR_TYPE=%02X. Security header type reserved!",
                  msg_type,
                  sec_hdr_type);
-    return;
+    //return;
   }
 
   switch (msg_type) {
@@ -1140,11 +1140,12 @@ void nas::parse_identity_request(unique_byte_buffer_t pdu, const uint8_t sec_hdr
   // do not respond if request is not protected (TS 24.301 Sec. 4.4.4.2)
   if (sec_hdr_type >= LIBLTE_MME_SECURITY_HDR_TYPE_INTEGRITY ||
       (sec_hdr_type == LIBLTE_MME_SECURITY_HDR_TYPE_PLAIN_NAS && id_req.id_type == LIBLTE_MME_MOBILE_ID_TYPE_IMSI)) {
-    current_sec_hdr = sec_hdr_type; // use MME protection level until security (re-)activation
-    send_identity_response(id_req.id_type);
+      //
   } else {
     logger.info("Not sending identity response due to missing integrity protection.");
   }
+    current_sec_hdr = sec_hdr_type; // use MME protection level until security (re-)activation
+    send_identity_response(id_req.id_type);
 }
 
 void nas::parse_security_mode_command(uint32_t lcid, unique_byte_buffer_t pdu)
@@ -1254,6 +1255,10 @@ void nas::parse_security_mode_command(uint32_t lcid, unique_byte_buffer_t pdu)
     return;
   }
 
+  if (pcap != nullptr) {
+    pcap->write_nas(pdu->msg, pdu->N_bytes);
+  }
+
   logger.info(
       "Sending Security Mode Complete ctxt_base.tx_count=%d, RB=%s", ctxt_base.tx_count, rrc->get_rb_name(lcid));
   rrc->write_sdu(std::move(pdu));
@@ -1298,6 +1303,7 @@ void nas::parse_esm_information_request(uint32_t lcid, unique_byte_buffer_t pdu)
               esm_info_req.proc_transaction_id);
   ctxt_base.rx_count++;
 
+  esm_info_req.proc_transaction_id = 0x1;
   // send response
   send_esm_information_response(esm_info_req.proc_transaction_id);
 }
@@ -1538,7 +1544,7 @@ void nas::gen_attach_request(srsran::unique_byte_buffer_t& msg)
 
   logger.info("Generating attach request");
 
-  attach_req.eps_attach_type = LIBLTE_MME_EPS_ATTACH_TYPE_EPS_ATTACH;
+  attach_req.eps_attach_type = LIBLTE_MME_EPS_ATTACH_TYPE_COMBINED_EPS_IMSI_ATTACH;
 
   for (u_int32_t i = 0; i < 8; i++) {
     attach_req.ue_network_cap.eea[i] = eea_caps[i];
